@@ -90,12 +90,12 @@ std::thread listener([&]() {
 
         LamportMessage rel = { getClock(), rank };
         for (int i = 0; i < NUM_GRANNIES; ++i) {
-            MPI_Send(&rel, 2, MPI_INT, i, MSG_REL_JAR, MPI_COMM_WORLD);
+            MPI_Send(&rel, 2, MPI_INT, i, MSG_REL_JAM, MPI_COMM_WORLD); //zwrot sloika
         }
 
         for (int i = NUM_GRANNIES; i < TOTAL_PROCESSES; ++i) {
             if (i == rank) continue;
-            MPI_Send(&rel, 2, MPI_INT, i, MSG_REL_JAM, MPI_COMM_WORLD);
+            MPI_Send(&rel, 2, MPI_INT, i, MSG_REL_JAM, MPI_COMM_WORLD);//usuniecia z kolejki
         }
 
         removeFromQueue(jamQueue, rank);

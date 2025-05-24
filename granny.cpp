@@ -44,8 +44,13 @@ void runGranny(int rank) {
                     break;
                 case MSG_REL_JAR:
                     removeFromQueue(jarQueue, recvMsg.sender);
+                    // availableJars++;
+                    std::cout << "[Babcia " << rank << "] widzi, ze Babcia "<<recvMsg.sender << "skonczyla robic konfiture (clock=" << getClock() << ")\n";
+                    break;
+                 case MSG_REL_JAM:
+                    // removeFromQueue(jarQueue, recvMsg.sender);
                     availableJars++;
-                    std::cout << "[Babcia " << rank << "] odzyskała słoik (clock=" << getClock() << ")\n";
+                    std::cout << "[Babcia  " << rank << "] odzyskała słoik od Studentki"<<recvMsg.sender<<"(clock=" << getClock() << ")\n";
                     break;
             }
         }
