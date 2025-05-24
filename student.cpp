@@ -28,6 +28,7 @@ std::thread listener([&]() {
                 std::cout << "[Studentka " << rank << "] otrzymała info o konfiturze (clock=" << getClock() << ")\n";
                 break;
             case MSG_REL_JAM:
+                jamAvailable--;
                 if (!removeFromQueue(jamQueue, msg.sender)) {
                     std::cout << "[Studentka " << rank << "] PRÓBA usunięcia " << msg.sender << " z pustej kolejki!\n";
                 } else {
@@ -86,7 +87,7 @@ std::thread listener([&]() {
 
         std::cout << "[Studentka " << rank << "] zjada konfiturę (clock=" << getClock() << ")\n";
         std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-        jamAvailable--;
+        // jamAvailable--;
 
         LamportMessage rel = { getClock(), rank };
         for (int i = 0; i < NUM_GRANNIES; ++i) {
@@ -94,7 +95,7 @@ std::thread listener([&]() {
         }
 
         for (int i = NUM_GRANNIES; i < TOTAL_PROCESSES; ++i) {
-            if (i == rank) continue;
+            // if (i == rank) continue;
             MPI_Send(&rel, 2, MPI_INT, i, MSG_REL_JAM, MPI_COMM_WORLD);//usuniecia z kolejki
         }
 
