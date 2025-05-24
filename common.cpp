@@ -27,10 +27,14 @@ void addToQueue(std::vector<LamportRequest>& queue, int timestamp, int rank) {
     std::sort(queue.begin(), queue.end());
 }
 
-void removeFromQueue(std::vector<LamportRequest>& queue, int rank) {
-    queue.erase(std::remove_if(queue.begin(), queue.end(),
-        [rank](const LamportRequest& r) { return r.rank == rank; }), queue.end());
+bool removeFromQueue(std::vector<LamportRequest>& queue, int rank) {
+    auto it = std::remove_if(queue.begin(), queue.end(),
+        [rank](const LamportRequest& r) { return r.rank == rank; });
+    bool removed = it != queue.end();
+    queue.erase(it, queue.end());
+    return removed;
 }
+
 
 bool isFirstInQueue(const std::vector<LamportRequest>& queue, int rank) {
     return !queue.empty() && queue.front().rank == rank;

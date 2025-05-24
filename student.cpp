@@ -4,40 +4,50 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <atomic>
 
 extern int lamportClock;
 extern std::vector<LamportRequest> jamQueue;
 
 void runStudent(int rank) {
     int jamAcks = 0;
-    int jamAvailable = 0;
+    std::atomic<int> jamAvailable(0);
 
-    std::thread listener([&]() {
-        while (true) {
-            LamportMessage msg;
-            MPI_Status status;
-            MPI_Recv(&msg, 2, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-            updateClock(msg.timestamp);
+    std::atomic<int> ackCount(0);
 
-            switch (status.MPI_TAG) {
-                case MSG_NEW_JAM:
-                    jamAvailable++;
-                    std::cout << "[Studentka " << rank << "] otrzymała info o konfiturze (clock=" << getClock() << ")\n";
-                    break;
-                case MSG_REL_JAM:
-                    removeFromQueue(jamQueue, msg.sender);
+std::thread listener([&]() {
+    while (true) {
+        LamportMessage msg;
+        MPI_Status status;
+        MPI_Recv(&msg, 2, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+        updateClock(msg.timestamp);
+
+        switch (status.MPI_TAG) {
+            case MSG_NEW_JAM:
+                jamAvailable++;
+                std::cout << "[Studentka " << rank << "] otrzymała info o konfiturze (clock=" << getClock() << ")\n";
+                break;
+            case MSG_REL_JAM:
+                if (!removeFromQueue(jamQueue, msg.sender)) {
+                    std::cout << "[Studentka " << rank << "] PRÓBA usunięcia " << msg.sender << " z pustej kolejki!\n";
+                } else {
                     std::cout << "[Studentka " << rank << "] usunęła z kolejki: " << msg.sender << "\n";
-                    break;
-                case MSG_REQ_JAM:
-                    addToQueue(jamQueue, msg.timestamp, msg.sender);
-                    {
-                        LamportMessage ack = { getClock(), rank };
-                        MPI_Send(&ack, 2, MPI_INT, msg.sender, MSG_ACK_JAM, MPI_COMM_WORLD);
-                    }
-                    break;
-            }
+                }
+                break;
+            case MSG_REQ_JAM:
+                addToQueue(jamQueue, msg.timestamp, msg.sender);
+                {
+                    LamportMessage ack = { getClock(), rank };
+                    MPI_Send(&ack, 2, MPI_INT, msg.sender, MSG_ACK_JAM, MPI_COMM_WORLD);
+                }
+                break;
+            case MSG_ACK_JAM:
+                ackCount++;
+                break;
         }
-    });
+    }
+});
+
 
     while (true) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1500 + rand() % 3000));
@@ -60,13 +70,11 @@ void runStudent(int rank) {
             MPI_Send(&req, 2, MPI_INT, i, MSG_REQ_JAM, MPI_COMM_WORLD);
         }
 
-        while (jamAcks < NUM_STUDENTS - 1) {
-            LamportMessage ack;
-            MPI_Status status;
-            MPI_Recv(&ack, 2, MPI_INT, MPI_ANY_SOURCE, MSG_ACK_JAM, MPI_COMM_WORLD, &status);
-            updateClock(ack.timestamp);
-            jamAcks++;
-        }
+        ackCount = 0;
+
+    while (ackCount.load() < NUM_STUDENTS - 1) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
 
         while (true) {
             bool first = isFirstInQueue(jamQueue, rank);

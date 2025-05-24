@@ -27,6 +27,6 @@ void updateClock(int received);
 int getClock();
 
 void addToQueue(std::vector<LamportRequest>& queue, int timestamp, int rank);
-void removeFromQueue(std::vector<LamportRequest>& queue, int rank);
+bool removeFromQueue(std::vector<LamportRequest>& queue, int rank);
 bool isFirstInQueue(const std::vector<LamportRequest>& queue, int rank);
 void printQueue(const std::vector<LamportRequest>& queue, int rank);

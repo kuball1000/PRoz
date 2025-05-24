@@ -1,3 +1,4 @@
+// granny.cpp
 #include "common.h"
 #include "consts.h"
 #include "granny.h"
@@ -48,6 +49,10 @@ void runGranny(int rank) {
                     break;
             }
         }
+
+        std::cout << "[Babcia " << rank << "] kolejka: ";
+        printQueue(jarQueue, rank);
+        std::cout << "[Babcia " << rank << "] dostępne słoiki: " << availableJars << "\n";
 
         while (!(isFirstInQueue(jarQueue, rank) && availableJars > 0)) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
