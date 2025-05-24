@@ -65,7 +65,14 @@ void runGranny(int rank) {
         printQueue(jarQueue, rank);
         std::cout << "[Babcia " << rank << "] dostępne słoiki: " << availableJars.load() << "\n";
 
-        while (!(isFirstInQueue(jarQueue, rank) && availableJars.load() > 0)) {
+        int position = getPositionInQueue(jarQueue, rank);
+        if (position != -1) {
+            std::cout << "Babcia " << rank << " jest na pozycji " << position << " w kolejce\n";
+        } else {
+            std::cout << "Babci " << rank << " nie ma w kolejce\n";
+        }
+
+        while (!(position <= availableJars.load() && availableJars.load() > 0)) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
 
@@ -79,12 +86,12 @@ void runGranny(int rank) {
             // if (i == rank) continue;
             MPI_Send(&relMsg, 2, MPI_INT, i, MSG_REL_JAR, MPI_COMM_WORLD);
         }
-        removeFromQueue(jarQueue, rank);
+        // removeFromQueue(jarQueue, rank);
 
         for (int i = NUM_GRANNIES; i < TOTAL_PROCESSES; ++i) {
             MPI_Send(&relMsg, 2, MPI_INT, i, MSG_NEW_JAM, MPI_COMM_WORLD);
         }
     }
 
-    listener.join();  // jeśli planujesz zakończenie programu, inaczej można dać detach
+    listener.join();
 }

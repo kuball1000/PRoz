@@ -29,11 +29,8 @@ std::thread listener([&]() {
                 break;
             case MSG_REL_JAM:
                 jamAvailable--;
-                if (!removeFromQueue(jamQueue, msg.sender)) {
-                    std::cout << "[Studentka " << rank << "] PRÓBA usunięcia " << msg.sender << " z pustej kolejki!\n";
-                } else {
-                    std::cout << "[Studentka " << rank << "] usunęła z kolejki: " << msg.sender << "\n";
-                }
+                removeFromQueue(jamQueue, msg.sender);
+                std::cout << "[Studentka " << rank << "] usunęła z kolejki: " << msg.sender << "\n";
                 break;
             case MSG_REQ_JAM:
                 addToQueue(jamQueue, msg.timestamp, msg.sender);
@@ -78,9 +75,14 @@ std::thread listener([&]() {
     }
 
         while (true) {
-            bool first = isFirstInQueue(jamQueue, rank);
-            if (first && jamAvailable > 0) break;
-            std::cout << "[Studentka " << rank << "] NIE wchodzi – first=" << first << ", jamAvailable=" << jamAvailable << "\n";
+            int position = getPositionInQueue(jarQueue, rank);
+            if (position != -1) {
+                std::cout << "Babcia " << rank << " jest na pozycji " << position << " w kolejce\n";
+            } else {
+                std::cout << "Babci " << rank << " nie ma w kolejce\n";
+            }
+            if (position <= jamAvailable && jamAvailable > 0) break;
+            std::cout << "[Studentka " << rank << "] NIE wchodzi – first=" << position << ", jamAvailable=" << jamAvailable << "\n";
             printQueue(jamQueue, rank);
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
@@ -90,16 +92,19 @@ std::thread listener([&]() {
         // jamAvailable--;
 
         LamportMessage rel = { getClock(), rank };
-        for (int i = 0; i < NUM_GRANNIES; ++i) {
-            MPI_Send(&rel, 2, MPI_INT, i, MSG_REL_JAM, MPI_COMM_WORLD); //zwrot sloika
-        }
 
         for (int i = NUM_GRANNIES; i < TOTAL_PROCESSES; ++i) {
             // if (i == rank) continue;
             MPI_Send(&rel, 2, MPI_INT, i, MSG_REL_JAM, MPI_COMM_WORLD);//usuniecia z kolejki
         }
 
-        removeFromQueue(jamQueue, rank);
+        for (int i = 0; i < NUM_GRANNIES; ++i) {
+            MPI_Send(&rel, 2, MPI_INT, i, MSG_REL_JAM, MPI_COMM_WORLD); //zwrot sloika
+        }
+
+
+
+        // removeFromQueue(jamQueue, rank);
     }
 
     listener.join();

@@ -47,3 +47,12 @@ void printQueue(const std::vector<LamportRequest>& queue, int rank) {
     }
     std::cout << "\n";
 }
+
+int getPositionInQueue(const std::vector<LamportRequest>& queue, int rank) {
+    for (size_t i = 0; i < queue.size(); ++i) {
+        if (queue[i].rank == rank) {
+            return static_cast<int>(i);
+        }
+    }
+    return -1; // babci nie ma w kolejce
+}
