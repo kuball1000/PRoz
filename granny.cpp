@@ -33,11 +33,11 @@ void runGranny(int rank) {
                 case MSG_REL_JAR:
                     availableJars--;
                     removeFromQueue(jarQueue, recvMsg.sender);
-                    std::cout << "[Babcia " << rank << "] widzi, że Babcia " << recvMsg.sender << " skończyła robić konfiturę\n";
+                    std::cout << "[Babcia " << rank << "] - widzi, że Babcia " << recvMsg.sender << " skończyła robić konfiturę - (clock=" << getClock() << ")\n";
                     break;
                 case MSG_REL_JAM:
                     availableJars++;
-                    std::cout << "[Babcia " << rank << "] odzyskała słoik od Studentki " << recvMsg.sender << "\n";
+                    std::cout << "[Babcia " << rank << "] - odzyskała słoik od Studentki " << recvMsg.sender << "- (clock=" << getClock() << ")\n";
                     break;
             }
         }
@@ -61,22 +61,23 @@ void runGranny(int rank) {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
 
-        std::cout << "[Babcia " << rank << "] kolejka: ";
+        std::cout << "[Babcia " << rank << "] - kolejka: "; 
         printQueue(jarQueue, rank);
-        std::cout << "[Babcia " << rank << "] dostępne słoiki: " << availableJars.load() << "\n";
+        std::cout << " - (clock=" << getClock() << ")\n";
+        std::cout << "[Babcia " << rank << "] - dostępne słoiki: " << availableJars.load() << " - (clock=" << getClock() << ")\n";
 
         int position = getPositionInQueue(jarQueue, rank);
         if (position != -1) {
-            std::cout << "[Babcia " << rank << "] jest na pozycji " << position << " w kolejce\n";
+            std::cout << "[Babcia " << rank << "] - jest na pozycji " << position << " w kolejce - (clock=" << getClock() << ")\n";
         } else {
-            std::cout << "[Babcia " << rank << "] nie ma w kolejce\n";
+            std::cout << "[Babcia " << rank << "] - nie ma w kolejce - (clock=" << getClock() << ")\n";
         }
 
         while (!(position < availableJars.load() && availableJars.load() > 0)) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
 
-        std::cout << "[Babcia " << rank << "] robi konfiturę (clock=" << getClock() << ")\n";
+        std::cout << "[Babcia " << rank << "] - robi konfiturę - (clock=" << getClock() << ")\n";
         std::this_thread::sleep_for(std::chrono::milliseconds(2000));
         jamCount++;
         // availableJars--;
