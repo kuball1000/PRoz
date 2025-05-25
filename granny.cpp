@@ -67,12 +67,12 @@ void runGranny(int rank) {
 
         int position = getPositionInQueue(jarQueue, rank);
         if (position != -1) {
-            std::cout << "Babcia " << rank << " jest na pozycji " << position << " w kolejce\n";
+            std::cout << "[Babcia " << rank << "] jest na pozycji " << position << " w kolejce\n";
         } else {
-            std::cout << "Babci " << rank << " nie ma w kolejce\n";
+            std::cout << "[Babcia " << rank << "] nie ma w kolejce\n";
         }
 
-        while (!(position <= availableJars.load() && availableJars.load() > 0)) {
+        while (!(position < availableJars.load() && availableJars.load() > 0)) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
 

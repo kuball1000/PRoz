@@ -75,13 +75,13 @@ std::thread listener([&]() {
     }
 
         while (true) {
-            int position = getPositionInQueue(jarQueue, rank);
+            int position = getPositionInQueue(jamQueue, rank);
             if (position != -1) {
-                std::cout << "Babcia " << rank << " jest na pozycji " << position << " w kolejce\n";
+                std::cout << "[Studentka " << rank << "] jest na pozycji " << position << " w kolejce\n";
             } else {
-                std::cout << "Babci " << rank << " nie ma w kolejce\n";
+                std::cout << "[Studentka  " << rank << "] nie ma w kolejce\n";
             }
-            if (position <= jamAvailable && jamAvailable > 0) break;
+            if (position < jamAvailable && jamAvailable > 0) break;
             std::cout << "[Studentka " << rank << "] NIE wchodzi – first=" << position << ", jamAvailable=" << jamAvailable << "\n";
             printQueue(jamQueue, rank);
             std::this_thread::sleep_for(std::chrono::milliseconds(500));

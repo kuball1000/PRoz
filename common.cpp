@@ -54,5 +54,5 @@ int getPositionInQueue(const std::vector<LamportRequest>& queue, int rank) {
             return static_cast<int>(i);
         }
     }
-    return -1; // babci nie ma w kolejce
+    return -1;
 }
