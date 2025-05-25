@@ -25,12 +25,12 @@ std::thread listener([&]() {
         switch (status.MPI_TAG) {
             case MSG_NEW_JAM:
                 jamAvailable++;
-                std::cout << "[Studentka " << rank << "] otrzymała info o konfiturze (clock=" << getClock() << ")\n";
+                std::cout << "[Studentka " << rank << "] - otrzymała info o konfiturze - (clock=" << getClock() << ")\n";
                 break;
             case MSG_REL_JAM:
                 jamAvailable--;
                 removeFromQueue(jamQueue, msg.sender);
-                std::cout << "[Studentka " << rank << "] usunęła z kolejki: " << msg.sender << "\n";
+                std::cout << "[Studentka " << rank << "] - usunęła z kolejki: " << msg.sender <<" - (clock"<< getClock()<<")\n";
                 break;
             case MSG_REQ_JAM:
                 addToQueue(jamQueue, msg.timestamp, msg.sender);
@@ -51,7 +51,7 @@ std::thread listener([&]() {
         std::this_thread::sleep_for(std::chrono::milliseconds(1500 + rand() % 3000));
 
         if (jamAvailable <= 0) {
-            std::cout << "[Studentka " << rank << "] czeka (clock=" << getClock() << ")\n";
+            std::cout << "[Studentka " << rank << "] - czeka - (clock=" << getClock() << ")\n";
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
             continue;
         }
@@ -59,7 +59,7 @@ std::thread listener([&]() {
         incrementClock();
         int timestamp = getClock();
         addToQueue(jamQueue, timestamp, rank);
-        std::cout << "[Studentka " << rank << "] chce konfiturę (clock=" << timestamp << ")\n";
+        std::cout << "[Studentka " << rank << "] - chce konfiturę - (clock=" << timestamp << ")\n";
         jamAcks = 0;
 
         LamportMessage req = { timestamp, rank };
@@ -77,17 +77,19 @@ std::thread listener([&]() {
         while (true) {
             int position = getPositionInQueue(jamQueue, rank);
             if (position != -1) {
-                std::cout << "[Studentka " << rank << "] jest na pozycji " << position << " w kolejce\n";
+                std::cout << "[Studentka " << rank << "] - jest na pozycji " << position << " w kolejce"<<" - (clock"<< getClock()<<")\n";
             } else {
-                std::cout << "[Studentka  " << rank << "] nie ma w kolejce\n";
+                std::cout << "[Studentka  " << rank << "] - nie ma w kolejce"<<" - (clock"<< getClock()<<")\n";
             }
             if (position < jamAvailable && jamAvailable > 0) break;
-            std::cout << "[Studentka " << rank << "] NIE wchodzi – first=" << position << ", jamAvailable=" << jamAvailable << "\n";
+            std::cout << "[Studentka " << rank << "] - NIE wchodzi – first=" << position << ", jamAvailable=" << jamAvailable <<" - (clock"<< getClock()<<")\n";
+            std::cout << "[Studentka " << rank << "] - ";
             printQueue(jamQueue, rank);
+            std::cout<<" - (clock"<< getClock()<<")\n";
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
 
-        std::cout << "[Studentka " << rank << "] zjada konfiturę (clock=" << getClock() << ")\n";
+        std::cout << "[Studentka " << rank << "] - zjada konfiturę (clock=" << getClock()<< " - (clock"<< getClock()<<")\n";
         std::this_thread::sleep_for(std::chrono::milliseconds(1500));
         // jamAvailable--;
 
