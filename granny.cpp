@@ -5,27 +5,15 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <atomic>
 
 void runGranny(int rank) {
-    int jarAcks = 0;
-    int availableJars = NUM_JARS;
+    std::atomic<int> jarAcks(0);
+    std::atomic<int> availableJars(NUM_JARS);
     int jamCount = 0;
 
-    while (true) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000 + rand() % 3000));
-
-        incrementClock();
-        int timestamp = getClock();
-        addToQueue(jarQueue, timestamp, rank);
-        jarAcks = 0;
-
-        LamportMessage msg = { timestamp, rank };
-        for (int i = 0; i < NUM_GRANNIES; ++i) {
-            if (i == rank) continue;
-            MPI_Send(&msg, 2, MPI_INT, i, MSG_REQ_JAR, MPI_COMM_WORLD);
-        }
-
-        while (jarAcks < NUM_GRANNIES - 1) {
+    std::thread listener([&]() {
+        while (true) {
             LamportMessage recvMsg;
             MPI_Status status;
             MPI_Recv(&recvMsg, 2, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
@@ -43,35 +31,68 @@ void runGranny(int rank) {
                     }
                     break;
                 case MSG_REL_JAR:
+                    availableJars--;
                     removeFromQueue(jarQueue, recvMsg.sender);
+                    std::cout << "[Babcia " << rank << "] - widzi, że Babcia " << recvMsg.sender << " skończyła robić konfiturę - (clock=" << getClock() << ")\n";
+                    break;
+                case MSG_REL_JAM:
                     availableJars++;
-                    std::cout << "[Babcia " << rank << "] odzyskała słoik (clock=" << getClock() << ")\n";
+                    std::cout << "[Babcia " << rank << "] - odzyskała słoik od Studentki " << recvMsg.sender << "- (clock=" << getClock() << ")\n";
                     break;
             }
         }
+    });
 
-        std::cout << "[Babcia " << rank << "] kolejka: ";
+    while (true) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000 + rand() % 3000));
+
+        incrementClock();
+        int timestamp = getClock();
+        addToQueue(jarQueue, timestamp, rank);
+        jarAcks = 0;
+
+        LamportMessage msg = { timestamp, rank };
+        for (int i = 0; i < NUM_GRANNIES; ++i) {
+            if (i == rank) continue;
+            MPI_Send(&msg, 2, MPI_INT, i, MSG_REQ_JAR, MPI_COMM_WORLD);
+        }
+
+        while (jarAcks.load() < NUM_GRANNIES - 1) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+
+        std::cout << "[Babcia " << rank << "] - kolejka: "; 
         printQueue(jarQueue, rank);
-        std::cout << "[Babcia " << rank << "] dostępne słoiki: " << availableJars << "\n";
+        std::cout << " - (clock=" << getClock() << ")\n";
+        std::cout << "[Babcia " << rank << "] - dostępne słoiki: " << availableJars.load() << " - (clock=" << getClock() << ")\n";
 
-        while (!(isFirstInQueue(jarQueue, rank) && availableJars > 0)) {
+        int position = getPositionInQueue(jarQueue, rank);
+        if (position != -1) {
+            std::cout << "[Babcia " << rank << "] - jest na pozycji " << position << " w kolejce - (clock=" << getClock() << ")\n";
+        } else {
+            std::cout << "[Babcia " << rank << "] - nie ma w kolejce - (clock=" << getClock() << ")\n";
+        }
+
+        while (!(position < availableJars.load() && availableJars.load() > 0)) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
 
-        std::cout << "[Babcia " << rank << "] robi konfiturę (clock=" << getClock() << ")\n";
-        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+        std::cout << "[Babcia " << rank << "] - robi konfiturę - (clock=" << getClock() << ")\n";
+        std::this_thread::sleep_for(std::chrono::milliseconds(5000));
         jamCount++;
-        availableJars--;
+        // availableJars--;
 
         LamportMessage relMsg = { getClock(), rank };
         for (int i = 0; i < NUM_GRANNIES; ++i) {
-            if (i == rank) continue;
+            // if (i == rank) continue;
             MPI_Send(&relMsg, 2, MPI_INT, i, MSG_REL_JAR, MPI_COMM_WORLD);
         }
-        removeFromQueue(jarQueue, rank);
+        // removeFromQueue(jarQueue, rank);
 
         for (int i = NUM_GRANNIES; i < TOTAL_PROCESSES; ++i) {
             MPI_Send(&relMsg, 2, MPI_INT, i, MSG_NEW_JAM, MPI_COMM_WORLD);
         }
     }
+
+    listener.join();
 }

@@ -1,7 +1,7 @@
 #pragma once
 
-#define NUM_GRANNIES 1
-#define NUM_STUDENTS 2
+#define NUM_GRANNIES 3
+#define NUM_STUDENTS 3
 #define TOTAL_PROCESSES (NUM_GRANNIES + NUM_STUDENTS)
 #define NUM_JARS 3
 
