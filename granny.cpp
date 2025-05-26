@@ -1,4 +1,3 @@
-// granny.cpp
 #include "common.h"
 #include "consts.h"
 #include "granny.h"
@@ -10,7 +9,6 @@
 void runGranny(int rank) {
     std::atomic<int> jarAcks(0);
     std::atomic<int> availableJars(NUM_JARS);
-    int jamCount = 0;
 
     std::thread listener([&]() {
         while (true) {
@@ -79,7 +77,6 @@ void runGranny(int rank) {
 
         std::cout << "[Babcia " << rank << "] - robi konfiturę - (clock=" << getClock() << ")\n";
         std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-        jamCount++;
         // availableJars--;
 
         LamportMessage relMsg = { getClock(), rank };
