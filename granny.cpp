@@ -1,4 +1,3 @@
-// granny.cpp
 #include "common.h"
 #include "consts.h"
 #include "granny.h"
