@@ -41,7 +41,7 @@ bool isFirstInQueue(const std::vector<LamportRequest>& queue, int rank) {
 }
 
 void printQueue(const std::vector<LamportRequest>& queue, int rank) {
-    std::cout << "[DEBUG " << rank << "] kolejka = ";
+    std::cout << " " << rank << " kolejka = ";
     for (const auto& r : queue) {
         std::cout << "(" << r.timestamp << "," << r.rank << ") ";
     }

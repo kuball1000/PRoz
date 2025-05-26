@@ -10,9 +10,7 @@ extern int lamportClock;
 extern std::vector<LamportRequest> jamQueue;
 
 void runStudent(int rank) {
-    int jamAcks = 0;
     std::atomic<int> jamAvailable(0);
-
     std::atomic<int> ackCount(0);
 
 std::thread listener([&]() {
@@ -60,7 +58,6 @@ std::thread listener([&]() {
         int timestamp = getClock();
         addToQueue(jamQueue, timestamp, rank);
         std::cout << "[Studentka " << rank << "] - chce konfiturę - (clock=" << timestamp << ")\n";
-        jamAcks = 0;
 
         LamportMessage req = { timestamp, rank };
         for (int i = NUM_GRANNIES; i < TOTAL_PROCESSES; ++i) {
